@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>أداة تحويل الأسئلة بين النص وJSON</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 15px; /* Slightly reduced padding for smaller screens */
+      background-color: #f9f9f9;
+      direction: rtl;
+      text-align: right;
+      line-height: 1.6; /* Improved readability */
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 1.8em; /* Responsive font size */
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap; /* Allows items to stack on small screens */
+      max-width: 1200px; /* Max width for large screens */
+      margin: 0 auto; /* Center the container on wide screens */
+    }
+    .main-content {
+      flex: 1;
+      min-width: 300px; /* Minimum width before wrapping */
+    }
+    .box {
+      margin-bottom: 20px;
+      background-color: white;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .vertical-buttons-box {
+      width: 250px; /* Fixed width for vertical buttons */
+      flex-shrink: 0; /* Prevent shrinking below 250px */
+      /* On smaller screens, flex-wrap in .container will stack this below main-content */
+    }
+    textarea {
+      width: 100%;
+      height: 200px; /* Slightly reduced default height */
+      margin-top: 5px;
+      font-size: 1em; /* Responsive font size */
+      white-space: pre-wrap;
+      resize: vertical;
+      direction: ltr; /* JSON and code areas are typically LTR */
+      box-sizing: border-box; /* Include padding and border in the element's total width and height */
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+     #inputText {
+       direction: rtl; /* Input text is expected to be mostly Arabic */
+    }
+    .buttons {
+      margin-top: 5px;
+      display: flex; /* Use flex for button alignment */
+      gap: 8px; /* Increased space between buttons */
+      flex-wrap: wrap; /* Allow buttons to wrap */
+      justify-content: flex-end; /* Align buttons to the right (in RTL) */
+    }
+    button {
+      padding: 8px 15px; /* Slightly more padding */
+      font-size: 1em; /* Responsive font size */
+      cursor: pointer;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: background-color 0.2s ease; /* Smooth hover effect */
+      flex-grow: 0; /* Prevent buttons from stretching by default */
+      flex-shrink: 1; /* Allow buttons to shrink */
+    }
+    button:hover {
+        background-color: #e0e0e0;
+    }
+    .vertical-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .vertical-buttons button {
+      width: 100%;
+      text-align: right;
+      padding: 10px 15px; /* Match horizontal padding */
+    }
+    .vertical-buttons button:nth-child(1) {
+      background-color: #3498db;
+      color: white;
+    }
+     .vertical-buttons button:nth-child(1):hover {
+      background-color: #2980b9;
+    }
+    .vertical-buttons button:nth-child(2) {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .vertical-buttons button:nth-child(2):hover {
+        background-color: #27ae60;
+    }
+    .vertical-buttons button:nth-child(3) {
+      background-color: #9b59b6;
+      color: white;
+    }
+     .vertical-buttons button:nth-child(3):hover {
+        background-color: #8e44ad;
+     }
+    .dropdown {
+      position: relative;
+      display: block; /* Make dropdown button a block element */
+      width: 100%;
+    }
+     .dropdown > button { /* Style the dropdown toggle button */
+        width: 100%;
+        text-align: right;
+        padding: 10px 15px;
+     }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f9f9f9;
+      width: 100%;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 10; /* Ensure dropdown is above other content */
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 4px; /* Small space below button */
+      right: 0; /* Position dropdown correctly for RTL */
+      left: auto;
+    }
+    .dropdown-content button {
+      width: 100%;
+      text-align: right;
+      margin: 0;
+      border-radius: 0;
+      border-bottom: 1px solid #ddd;
+      background-color: #f1f1f1;
+      color: #333;
+      padding: 10px 15px;
+      box-sizing: border-box; /* Include padding in width */
+    }
+    .dropdown-content button:last-child {
+        border-bottom: none; /* No border on the last item */
+    }
+    .dropdown-content button:hover {
+      background-color: #ddd;
+    }
+    .show {
+      display: block;
+    }
+    .position-btn {
+      background-color: #e67e22;
+      color: white;
+    }
+    .position-btn:hover {
+      background-color: #d35400;
+    }
+    .split-controls {
+      margin: 15px 0;
+      padding: 15px;
+      background-color: #f0f7fd;
+      border-radius: 5px;
+      /* display: none; Controlled by JS toggle */
+    }
+    .split-controls .buttons { /* Style buttons within split controls */
+         justify-content: flex-start; /* Align split control buttons to the left (in RTL) */
+         margin-bottom: 15px;
+    }
+     .split-controls .buttons button {
+         flex-grow: 1; /* Allow split control buttons to grow */
+     }
+    .split-input {
+      padding: 8px;
+      width: 100px;
+      margin: 0 10px 15px 0; /* Space below input on smaller screens */
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+       box-sizing: border-box;
+    }
+    .split-boxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .split-box {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      background-color: white;
+      width: calc(33.333% - 15px); /* Three boxes per row, accounting for gap */
+      min-width: 280px; /* Minimum width before layout change via media query */
+      position: relative;
+      box-sizing: border-box;
+      display: flex; /* Use flex for internal layout */
+      flex-direction: column; /* Stack content vertically */
+    }
+    .split-box h3 {
+      margin-top: 0;
+      color: #3498db;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+      font-size: 1.1em;
+    }
+    .split-box textarea {
+      height: 120px; /* Reduced height for split box textareas */
+      margin-bottom: 10px;
+      flex-grow: 1; /* Allow textarea to fill available space */
+    }
+    .split-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px; /* Space between action buttons */
+      margin-top: auto; /* Push actions to the bottom if textarea grows */
+    }
+     .split-actions button {
+         flex: 1; /* Distribute space */
+         text-align: center;
+         margin: 0;
+         padding: 8px;
+     }
+    .remaining-box {
+      width: 100%;
+      margin-top: 20px;
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+     .remaining-box textarea {
+         height: 150px; /* A bit taller for remaining */
+     }
+    .split-btn {
+      background-color: #3498db;
+      color: white;
+    }
+    .split-btn:hover {
+      background-color: #2980b9;
+    }
+    .clear-split-btn {
+      background-color: #f39c12;
+      color: white;
+    }
+    .clear-split-btn:hover {
+      background-color: #d35400;
+    }
+    .clear-all-btn {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .clear-all-btn:hover {
+      background-color: #c0392b;
+    }
+    .copy-btn {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .copy-btn:hover {
+      background-color: #27ae60;
+    }
+    .download-btn {
+      background-color: #9b59b6;
+      color: white;
+    }
+    .download-btn:hover {
+      background-color: #8e44ad;
+    }
+    label {
+      font-weight: bold;
+      display: block; /* Make label a block element */
+      margin-bottom: 5px; /* Space below label */
+    }
+    .status {
+      margin: 10px 0;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      word-break: break-word; /* Prevent overflow */
+    }
+    .success {
+      color: #27ae60;
+      background-color: #e8f8f0;
+    }
+    .error {
+      color: #e74c3c;
+      background-color: #fdecea;
+    }
+    .question-counter {
+      margin: 10px 0;
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    #instructionsBox {
+      background-color: #fffacd; /* Light yellow background */
+      border: 1px solid #f0e68c;
+      border-radius: 5px;
+      padding: 15px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      display: none; /* Initially hidden */
+      direction: rtl; /* Ensure instructions text is RTL */
+      text-align: right;
+       max-width: 800px; /* Limit instructions width */
+       margin-left: auto;
+       margin-right: auto;
+    }
+    #instructionsBox h3 {
+      margin-top: 0;
+      color: #b8860b;
+      border-bottom: 1px solid #f0e68c;
+      padding-bottom: 5px;
+      font-size: 1.2em;
+    }
+    #instructionsBox p, #instructionsBox ul {
+        margin-bottom: 10px;
+        line-height: 1.6;
+        font-size: 1em;
+    }
+     #instructionsBox ul {
+         padding-right: 25px; /* Indent list items */
+     }
+     #instructionsBox li {
+         margin-bottom: 5px;
+     }
+     #instructionsBox button { /* Style button inside instructions */
+         margin-top: 10px;
+         float: left; /* Position to the left (in RTL) */
+     }
+    .clear-storage-btn {
+        background-color: #ff6347; /* Tomato color */
+        color: white;
+    }
+    .clear-storage-btn:hover {
+         background-color: #ff4500; /* OrangeRed */
+    }
+     .main-buttons {
+        text-align: center;
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+     }
+     .main-buttons button {
+        padding: 10px 20px;
+        font-size: 1.1em; /* Slightly larger font */
+     }
+
+     /* --- Responsive Adjustments --- */
+
+     /* For tablets and smaller screens */
+    @media (max-width: 992px) {
+        .container {
+            gap: 15px;
+            padding: 10px;
+        }
+        .vertical-buttons-box {
+            width: 100%; /* Stack vertical buttons below main content */
+             order: 2; /* Place vertical buttons after main content */
+        }
+        .main-content {
+             order: 1; /* Place main content first */
+        }
+         h2 {
+             font-size: 1.6em;
+         }
+         button {
+             font-size: 0.95em;
+         }
+          .main-buttons button {
+             font-size: 1em;
+         }
+         textarea {
+             height: 180px; /* Slightly smaller height on tablets */
+         }
+         .split-box {
+             width: calc(50% - 10px); /* Two boxes per row on tablets */
+         }
+         .split-input {
+             width: 80px;
+             margin: 0 8px 10px 0;
+         }
+         #instructionsBox {
+             padding: 10px;
+         }
+         #instructionsBox ul {
+             padding-right: 20px;
+         }
+          #instructionsBox button {
+             float: none; /* No float, let it follow normal flow */
+             display: block;
+             margin-left: auto;
+             margin-right: auto;
+             width: auto; /* Auto width */
+             margin-top: 15px;
+          }
+    }
+
+     /* For mobile phones */
+    @media (max-width: 576px) {
+        body {
+            padding: 8px;
+        }
+        .container {
+            gap: 10px;
+             padding: 5px;
+        }
+        h2 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+         .box {
+             padding: 10px;
+             margin-bottom: 15px;
+         }
+         textarea {
+             height: 150px; /* Even smaller height on phones */
+             font-size: 0.9em;
+             padding: 8px;
+         }
+         button {
+            padding: 6px 10px;
+            font-size: 0.9em;
+         }
+          .main-buttons button {
+             font-size: 0.95em;
+              padding: 8px 15px;
+         }
+         .buttons {
+             gap: 5px;
+         }
+          .split-controls .buttons {
+             gap: 5px;
+          }
+         .split-box {
+            width: 100%; /* One box per row on phones */
+            min-width: 0; /* Allow shrinking */
+             padding: 8px;
+         }
+         .split-box h3 {
+             font-size: 1em;
+         }
+         .split-box textarea {
+             height: 100px; /* Smaller split textarea height */
+         }
+         .split-actions {
+             flex-direction: column; /* Stack action buttons vertically */
+             gap: 5px;
+         }
+         .split-actions button {
+             width: 100%; /* Make action buttons fill width */
+         }
+         .split-input {
+             width: 60px;
+              margin: 0 5px 10px 0;
+             padding: 6px;
+             font-size: 0.9em;
+         }
+         label {
+             font-size: 0.95em;
+         }
+         #instructionsBox {
+             padding: 8px;
+         }
+          #instructionsBox p, #instructionsBox ul {
+             font-size: 0.95em;
+          }
+          #instructionsBox ul {
+             padding-right: 15px;
+         }
+    }
+  </style>
+</head>
+<body>
+
+<h2>أداة تحويل الأسئلة بين النص وJSON</h2>
+
+<div id="instructionsBox">
+  <h3>تعليمات الاستخدام:</h3>
+  <p>تسمح لك هذه الأداة بتحويل الأسئلة بين صيغتين: نص عادي وصيغة JSON.</p>
+  <ul>
+    <li><strong>التحويل من نص إلى JSON:</strong>
+      <ul>
+        <li>في حقل "الأسئلة العادية"، أدخل أسئلتك بالصيغة التالية:</li>
+        <li>رقم. السؤال</li>
+        <li>مساحتين فارغتين + رقم. الإجابة الأولى</li>
+        <li>مساحتين فارغتين + رقم. الإجابة الثانية</li>
+        <li>... وهكذا للإجابات الأخرى.</li>
+        <li>سطر جديد يبدأ بـ "✅ الإجابة الصحيحة: (رقم الإجابة الصحيحة)"</li>
+        <li>اترك سطرًا فارغًا بين كل سؤال والسؤال التالي.</li>
+        <li>اضغط على زر "تحويل إلى JSON". ستظهر النتيجة في حقل "الصيغة بصيغة JSON".</li>
+      </ul>
+    </li>
+    <li><strong>التحويل من JSON إلى نص:</strong>
+      <ul>
+        <li>في حقل "الصيغة بصيغة JSON"، أدخل بيانات أسئلتك بصيغة JSON (كمصفوفة من الكائنات).</li>
+        <li>اضغط على زر "تحويل من JSON إلى أسئلة عادية". ستظهر النتيجة في حقل "الأسئلة العادية".</li>
+      </ul>
+    </li>
+    <li><strong>خيارات متقدمة:</strong>
+      <ul>
+        <li><strong>خلط ترتيب الأسئلة فقط:</strong> يعيد ترتيب الأسئلة بشكل عشوائي في مخرجات JSON.</li>
+        <li><strong>خلط الإجابات فقط:</strong> يعيد ترتيب الإجابات لكل سؤال بشكل عشوائي في مخرجات JSON، مع تحديث رقم الإجابة الصحيحة.</li>
+        <li><strong>خلط الأسئلة والإجابات معاً:</strong> يقوم بالخطوتين السابقتين.</li>
+        <li><strong>تحديد موضع الإجابة الصحيحة:</strong> يسمح لك باختيار موضع ثابت (مثال: الاختيار الأول دائماً) للإجابة الصحيحة لجميع الأسئلة في مخرجات JSON، مع إعادة ترتيب الإجابات الأخرى بناءً على ذلك.</li>
+        <li><strong>تقسيم الملف:</strong> يخفي/يظهر قسم تقسيم الأسئلة. يسمح لك بتحديد عدد الأسئلة في كل جزء ثم تقسيم الأسئلة الموجودة في حقل JSON إلى ملفات أصغر.</li>
+        <li><strong>مسح الكل:</strong> يمسح محتوى جميع الحقول ويستعيد الحالة الأولية.</li>
+        <li><strong>عرض عدد الأسئلة:</strong> يعرض عدد الأسئلة التي تم تحميلها بنجاح من حقل JSON.</li>
+      </ul>
+    </li>
+     <li><strong>حفظ البيانات:</strong> يتم حفظ محتوى حقل "الأسئلة العادية" وحقل "الصيغة بصيغة JSON" تلقائيًا في المتصفح للحفاظ عليه بين جلسات الاستخدام. يمكنك مسح هذه البيانات المحفوظة باستخدام الزر المخصص.</li>
+  </ul>
+  <button onclick="toggleInstructions()">إخفاء التعليمات</button>
+</div>
+
+
+<div class="container">
+  <div class="main-content">
+    <div class="box">
+      <label for="inputText">الأسئلة العادية:</label><br>
+      <div class="buttons">
+        <button onclick="clearInput()">مسح الحقل</button>
+        <button onclick="downloadText()">تنزيل كملف نصي</button>
+      </div>
+      <textarea id="inputText" placeholder="ادخل الأسئلة هنا..."></textarea>
+    </div>
+
+    <div class="box">
+      <label for="jsonOutput">الصيغة بصيغة JSON:</label><br>
+      <div class="buttons">
+        <button onclick="clearJSON()">مسح الحقل</button>
+        <button onclick="downloadJSON()">تنزيل كملف JSON</button>
+      </div>
+      <textarea id="jsonOutput" placeholder="النتيجة ستظهر هنا..."></textarea>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="box" id="splitSectionContainer" style="display:none;"> <label>تقسيم الأسئلة:</label>
+      <div class="question-counter">عدد الأسئلة: <span id="inputCount">0</span></div>
+      <div class="split-controls" id="splitSection">
+         <label for="splitNumber">عدد الأسئلة في الجزء:</label> <div> <input type="number" id="splitNumber" class="split-input" placeholder="مثال: 10" min="1">
+            <button onclick="splitQuestions()" class="split-btn">تقسيم الملف</button>
+            <button onclick="clearSplit()" class="clear-split-btn">مسح التقسيمات</button>
+         </div>
+         <div class="buttons" style="justify-content: center; margin-top: 10px;">
+            <button onclick="clearAllQuestions()" class="clear-all-btn">مسح الكل (الحقول والتقسيمات)</button>
+         </div>
+        <div id="splitStatus" class="status"></div>
+
+        <div class="split-boxes" id="splitBoxes"></div>
+
+        <div class="remaining-box" id="remainingBox" style="display:none;">
+          <h3>الأسئلة المتبقية</h3>
+          <textarea id="remainingQuestions" readonly></textarea>
+          <div class="split-actions">
+            <button onclick="copyToClipboard('remainingQuestions')" class="copy-btn">نسخ</button>
+            <button onclick="downloadSplit('remaining')" class="download-btn">حفظ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <div class="main-buttons">
+      <button onclick="convertToJSON()">تحويل إلى JSON</button>
+      <button onclick="convertFromJSON()">تحويل من JSON إلى أسئلة عادية</button>
+    </div>
+  </div>
+
+  <div class="box vertical-buttons-box">
+    <label>خيارات متقدمة:</label>
+    <div class="vertical-buttons">
+      <button onclick="shuffleQuestionsOnly()">خلط ترتيب الأسئلة فقط</button>
+      <button onclick="shuffleAnswersOnly()">خلط الإجابات فقط</button>
+      <button onclick="shuffleBoth()">خلط الأسئلة والإجابات معاً</button>
+
+      <div class="dropdown">
+        <button onclick="togglePositionDropdown()" class="position-btn">تحديد موضع الإجابة الصحيحة ▽</button>
+        <div id="positionDropdown" class="dropdown-content">
+          <button onclick="setCorrectPosition(1)">الاختيار الأول</button>
+          <button onclick="setCorrectPosition(2)">الاختيار الثاني</button>
+          <button onclick="setCorrectPosition(3)">الاختيار الثالث</button>
+          <button onclick="setCorrectPosition(4)">الاختيار الرابع</button>
+        </div>
+      </div>
+
+      <button onclick="toggleSplitSection()">تقسيم الملف</button>
+      <button onclick="showQuestionCount()">عرض عدد الأسئلة</button>
+      <button onclick="clearSplit()">مسح التقسيمات فقط</button> <button onclick="toggleInstructions()">إظهار التعليمات</button> <button onclick="clearLocalStorage()" class="clear-storage-btn">مسح البيانات المحفوظة في المتصفح</button> </div>
+  </div>
+</div>
+
+<script>
+  // ========== المتغيرات العامة ========== //
+  let originalQuestions = []; // Stores the questions array parsed from JSON output
+  let currentQuestions = []; // Used for shuffled/modified questions before displaying
+  let splitFiles = [];
+  let remainingQuestions = [];
+
+  // Local Storage Keys
+  const INPUT_TEXT_STORAGE_KEY = 'questionConverterInput';
+  const JSON_OUTPUT_STORAGE_KEY = 'questionConverterJSON';
+
+  // ========== Persistence Functions (New) ========== //
+
+  // Save textarea content to localStorage
+  function saveState() {
+    try {
+        localStorage.setItem(INPUT_TEXT_STORAGE_KEY, document.getElementById('inputText').value);
+        localStorage.setItem(JSON_OUTPUT_STORAGE_KEY, document.getElementById('jsonOutput').value);
+         // Optional: Save split number as well
+         localStorage.setItem('splitNumber', document.getElementById('splitNumber').value);
+    } catch (e) {
+        console.error("Error saving state to localStorage:", e);
+        // Could show a subtle message to the user if storage fails
+    }
+  }
+
+  // Load textarea content from localStorage
+  function loadState() {
+    try {
+        const savedInput = localStorage.getItem(INPUT_TEXT_STORAGE_KEY);
+        const savedJSON = localStorage.getItem(JSON_OUTPUT_STORAGE_KEY);
+        const savedSplitNumber = localStorage.getItem('splitNumber');
+
+
+        if (savedInput !== null) {
+          document.getElementById('inputText').value = savedInput;
+        }
+        if (savedJSON !== null) {
+          document.getElementById('jsonOutput').value = savedJSON;
+          // Attempt to parse on load to update originalQuestions and count
+          try {
+             let jsonString = savedJSON.trim().replace(/,\s*$/, '');
+             if (!jsonString.startsWith('[')) {
+                jsonString = '[' + jsonString + ']';
+             }
+             // Clean up potential extra whitespace/newlines within the string
+             jsonString = jsonString.replace(/\r?\n|\r/g, '').replace(/\s+/g, ' ').replace(/},\s*{/g, '},{');
+
+            originalQuestions = JSON.parse(jsonString);
+            updateCounters();
+            // showStatus("تم تحميل البيانات المحفوظة بنجاح.", false); // Maybe too frequent
+          } catch (e) {
+            console.error("Error loading or parsing saved JSON:", e);
+            originalQuestions = [];
+            updateCounters();
+            // Only show error if there was saved JSON data that failed to parse
+            if (savedJSON && savedJSON.trim().length > 0) {
+                 showStatus("تم تحميل بيانات محفوظة، لكن هناك خطأ في صيغة JSON المحفوظة. يرجى مراجعتها.", true);
+            }
+          }
+        }
+
+         if (savedSplitNumber !== null) {
+             document.getElementById('splitNumber').value = savedSplitNumber;
+         }
+
+
+    } catch (e) {
+        console.error("Error loading state from localStorage:", e);
+        // Could show a subtle message to the user if loading fails
+         showStatus("فشل في تحميل البيانات المحفوظة من المتصفح.", true);
+    }
+  }
+
+  // Clear saved data from localStorage
+  function clearLocalStorage() {
+      if (confirm('هل أنت متأكد أنك تريد مسح البيانات المحفوظة في المتصفح؟ لن يؤثر هذا على المحتوى الحالي في الحقول.')) {
+          try {
+            localStorage.removeItem(INPUT_TEXT_STORAGE_KEY);
+            localStorage.removeItem(JSON_OUTPUT_STORAGE_KEY);
+            localStorage.removeItem('splitNumber'); // Clear saved split number
+            showStatus('تم مسح البيانات المحفوظة في المتصفح.', false);
+          } catch (e) {
+             console.error("Error clearing localStorage:", e);
+             showStatus("فشل في مسح البيانات المحفوظة.", true);
+          }
+      }
+  }
+
+  // Add event listeners to save state on input change
+  document.addEventListener('DOMContentLoaded', () => {
+      loadState(); // Load state when page loads
+
+      // Save state whenever textarea content changes
+      document.getElementById('inputText').addEventListener('input', saveState);
+      document.getElementById('jsonOutput').addEventListener('input', saveState);
+       // Save split number when it changes
+      document.getElementById('splitNumber').addEventListener('input', saveState);
+  });
+
+
+  // ========== الدوال الأصلية (Modified to include persistence and status) ========== //
+
+  // تحويل الأسئلة العادية إلى JSON
+  function convertToJSON() {
+    const input = document.getElementById("inputText").value.trim();
+    const output = document.getElementById("jsonOutput");
+    output.value = ''; // Clear previous output
+    showStatus('', false); // Clear previous status
+
+    if (!input) {
+      showStatus('يرجى إدخال الأسئلة أولاً', true);
+      return;
+    }
+
+    const lines = input.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    let result = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      // Regex improvements: Make number optional and handle potential leading/trailing spaces better
+      const questionMatch = lines[i].match(/^\s*(\d+\.)?\s*(.+)$/u);
+      if (!questionMatch || questionMatch[2].trim().length === 0) {
+         // Skip lines that don't look like the start of a non-empty question
+         i++;
+         continue;
+      }
+
+      const question = questionMatch[2].trim();
+      i++;
+
+      const answers = [];
+      // Look for lines starting with optional spaces and a number followed by dot/space
+      while (i < lines.length && /^\s*\d+[\.\s]/.test(lines[i])) {
+        const optionMatch = lines[i].match(/^\s*\d+[\.\s]*(.+)$/u);
+        if (optionMatch && optionMatch[1].trim().length > 0) {
+          answers.push(optionMatch[1].trim());
+        }
+        i++;
+      }
+
+      let correctIndex = -1;
+      // Check for correct answer line (allowing variations and optional leading/trailing spaces)
+      if (i < lines.length && /^\s*✅\s*(Correct\s*answer|الإجابة\s*الصحيحة|الإجابة\s*الصحيحه):\s*\((\d+)\)/iu.test(lines[i])) {
+           const match = lines[i].match(/\((\d+)\)/);
+           if (match) {
+             correctIndex = parseInt(match[1]);
+           }
+           i++;
+      }
+
+
+      // Only add valid questions: non-empty question, at least 2 answers, and a valid correct index
+      if (question.length > 0 && answers.length >= 2 && correctIndex >= 1 && correctIndex <= answers.length) {
+        result.push({
+          q: question + " ", // Keep trailing space as in original code (though might be unnecessary)
+          a: answers.map(answer => answer + " "), // Keep trailing space
+          correct: correctIndex
+        });
+      } else {
+         // Log or handle parsing issues for debugging if needed
+         console.warn(`Skipping potential question due to parsing issue starting at line ${i - answers.length - (question.length > 0 ? 1 : 0) - (correctIndex > 0 ? 1: 0)}. Data:`, { question, answers, correctIndex, line: lines[i-(correctIndex > 0 ? 1: 0)] });
+      }
+    }
+
+    if (result.length === 0) {
+      output.value = 'لم يتم العثور على أسئلة صالحة بالصيغة المطلوبة.';
+       showStatus('لم يتم العثور على أسئلة صالحة بالصيغة المطلوبة.', true);
+       originalQuestions = [];
+    } else {
+      const formattedResult = result.map(item =>
+        `{ "q": "${escapeJsonString(item.q)}", "a": [${item.a.map(ans => `"${escapeJsonString(ans)}"`).join(',')}], "correct": ${item.correct} }`
+      ).join(",\n");
+      output.value = formattedResult;
+      originalQuestions = result;
+      showStatus(`تم تحويل ${result.length} سؤال إلى JSON بنجاح.`, false);
+    }
+     updateCounters();
+     saveState(); // Save state after conversion
+  }
+
+   // Helper function to escape strings for JSON (Handles backslashes, quotes, newlines, etc.)
+   function escapeJsonString(str) {
+       if (str === null || str === undefined) return "";
+       return String(str).replace(/\\/g, '\\\\')
+                 .replace(/"/g, '\\"')
+                 .replace(/\n/g, '\\n')
+                 .replace(/\r/g, '\\r')
+                 .replace(/\t/g, '\\t')
+                 .replace(/\f/g, '\\f')
+                 .replace(/[\u0000-\u001F]+/g, ''); // Remove control characters
+   }
+
+
+  // تحويل JSON إلى أسئلة عادية
+  function convertFromJSON() {
+    const jsonInput = document.getElementById("jsonOutput").value.trim();
+    const output = document.getElementById("inputText");
+    output.value = ''; // Clear previous output
+    showStatus('', false); // Clear previous status
+
+    if (!jsonInput) {
+      showStatus('يرجى إدخال JSON للتحويل', true);
+      return;
+    }
+
+    try {
+      let data;
+       // Attempt to parse as array first, then as single object wrapped in array
+      if (jsonInput.startsWith('[')) {
+          data = JSON.parse(jsonInput);
+      } else {
+           // Handle potential missing array brackets or trailing comma
+           let cleanedInput = jsonInput.replace(/,\s*$/, ''); // Remove trailing comma
+           if (!cleanedInput.startsWith('{')) {
+               showStatus('صيغة JSON غير صالحة. يجب أن تبدأ بكائن { أو مصفوفة [', true);
+               return;
+           }
+           data = JSON.parse(`[${cleanedInput}]`);
+      }
+
+
+      let result = '';
+      let validCount = 0;
+
+      if (!Array.isArray(data)) {
+           showStatus('صيغة JSON غير صالحة. يجب أن تكون مصفوفة من الكائنات.', true);
+           return;
+      }
+
+      data.forEach((item, index) => {
+          // Validate each item structure before processing
+           const isValidItem = item && typeof item === 'object' &&
+                              typeof item.q === 'string' && item.q.trim().length > 0 && // Question string exists and not just whitespace
+                              Array.isArray(item.a) && item.a.length >= 2 && // 'a' is an array with at least 2 elements
+                              item.a.every(ans => typeof ans === 'string') && // All answers are strings
+                              typeof item.correct === 'number' &&
+                              item.correct >= 1 && item.correct <= item.a.length; // Correct index is valid
+
+          if (isValidItem) {
+              const isArabic = /[\u0600-\u06FF]/.test(item.q); // التحقق إذا كان السؤال بالعربية
+              const correctLabel = isArabic ? "✅ الإجابة الصحيحة:" : "✅ Correct answer:";
+              result += `${validCount + 1}. ${item.q.trim()}\n`; // Trim spaces for plain text output
+              item.a.forEach((answer, i) => {
+                  result += `  ${i + 1}. ${answer.trim()}\n`; // Trim spaces for plain text output
+              });
+              result += `${correctLabel} (${item.correct}) ${item.a[item.correct - 1].trim()}\n\n`; // Trim spaces
+              validCount++;
+          } else {
+              console.warn(`Skipping invalid item at index ${index}:`, item);
+          }
+      });
+
+      if (validCount === 0) {
+        output.value = 'لم يتم العثور على أسئلة صالحة في بيانات JSON المدخلة.';
+         showStatus('لم يتم العثور على أسئلة صالحة في بيانات JSON المدخلة.', true);
+         originalQuestions = [];
+      } else {
+          output.value = result.trim();
+           // Update originalQuestions with only the valid ones that were converted
+          originalQuestions = data.filter(item =>
+               item && typeof item === 'object' && typeof item.q === 'string' && item.q.trim().length > 0 &&
+               Array.isArray(item.a) && item.a.length >= 2 && item.a.every(ans => typeof ans === 'string') &&
+               typeof item.correct === 'number' && item.correct >= 1 && item.correct <= item.a.length
+          );
+           showStatus(`تم تحويل ${validCount} سؤال من JSON إلى نص عادي بنجاح.`, false);
+      }
+       updateCounters();
+       saveState(); // Save state after conversion
+
+    } catch (e) {
+      showStatus('JSON غير صالح: ' + e.message, true);
+       originalQuestions = [];
+       updateCounters();
+    }
+  }
+
+  // تنزيل JSON كملف
+  function downloadJSON() {
+    const content = document.getElementById("jsonOutput").value.trim();
+    if (!content) {
+      showStatus('لا يوجد محتوى JSON لتنزيله', true);
+      return;
+    }
+
+    try {
+        // Add brackets if missing to make it a valid JSON array
+       let jsonContent = content;
+        if (!jsonContent.startsWith('[')) {
+            jsonContent = `[\n${jsonContent}\n]`;
+        } else if (!jsonContent.endsWith(']')) {
+             // Attempt to add bracket smartly if needed, e.g., if it ends with }
+             if (jsonContent.trim().endsWith('}')) {
+                 jsonContent = `${jsonContent.trim()}\n]`;
+             } else {
+                jsonContent = `${jsonContent}\n]`; // Simple append
+             }
+        }
+         // Attempt to parse to ensure validity before saving
+         JSON.parse(jsonContent);
+
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'questions.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blob);
+        showStatus('تم تنزيل ملف JSON بنجاح.', false);
+    } catch (e) {
+        console.error("Download JSON Error:", e);
+        showStatus('خطأ في تنزيل ملف JSON. تأكد من صحة الصيغة.', true);
+    }
+  }
+
+  // تنزيل النص العادي كملف
+  function downloadText() {
+    const content = document.getElementById("inputText").value.trim();
+    if (!content) {
+      showStatus('لا يوجد محتوى نصي لتنزيله', true);
+      return;
+    }
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'questions.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blob);
+     showStatus('تم تنزيل ملف النص بنجاح.', false);
+  }
+
+  // مسح الحقول (Modified to include saveState)
+  function clearInput() {
+    document.getElementById("inputText").value = '';
+     saveState(); // Save the cleared state
+     showStatus('تم مسح حقل الأسئلة العادية.', false);
+  }
+
+  function clearJSON() {
+    document.getElementById("jsonOutput").value = '';
+    originalQuestions = []; // Clear stored questions when JSON is cleared
+    updateCounters();
+    saveState(); // Save the cleared state
+     showStatus('تم مسح حقل JSON.', false);
+  }
+
+  // ========== دوال الخلط (Modified to use prepareQuestions and displayResult) ========== //
+
+  // خلط ترتيب الأسئلة فقط
+  function shuffleQuestionsOnly() {
+    if (!prepareQuestions()) return;
+
+    currentQuestions = shuffleArray([...originalQuestions]);
+    displayResult(currentQuestions); // displayResult updates originalQuestions and saves state
+    showStatus(`تم خلط ترتيب ${currentQuestions.length} سؤال بنجاح`, false);
+  }
+
+  // خلط الإجابات فقط
+  function shuffleAnswersOnly() {
+    if (!prepareQuestions()) return;
+
+    currentQuestions = originalQuestions.map(question => {
+      // Ensure 'a' exists and is an array with at least one answer
+      if (!question.a || !Array.isArray(question.a) || question.a.length === 0) {
+        console.warn("Skipping answer shuffle for question with invalid answers:", question);
+        return question; // Return original if answers are invalid
+      }
+
+      const correctIndex = Math.max(0, Math.min(question.correct - 1, question.a.length - 1));
+      const correctAnswer = question.a[correctIndex];
+      const shuffledAnswers = shuffleArray([...question.a]);
+      const newCorrectIndex = shuffledAnswers.indexOf(correctAnswer) + 1;
+
+      // Ensure correct answer was found after shuffle (should always be true if correctAnswer was valid)
+       if (newCorrectIndex === 0 && correctAnswer !== undefined) {
+           console.error("Correct answer not found after shuffling answers for question:", question);
+           // Fallback: keep original order and correct index if shuffling failed unexpectedly
+           return question;
+       }
+        // Handle case where correctAnswer was undefined due to bad original correct index
+       if (correctAnswer === undefined || newCorrectIndex === 0) {
+           console.error("Invalid correct index in original question, skipping answer shuffle:", question);
+            return question;
+       }
+
+
+      return {
+        q: question.q,
+        a: shuffledAnswers,
+        correct: newCorrectIndex
+      };
+    });
+
+    displayResult(currentQuestions); // displayResult updates originalQuestions and saves state
+    showStatus(`تم خلط إجابات ${currentQuestions.length} سؤال بنجاح`, false);
+  }
+
+  // خلط الأسئلة والإجابات معاً
+  function shuffleBoth() {
+    if (!prepareQuestions()) return;
+
+    const shuffledQuestions = shuffleArray([...originalQuestions]);
+
+    currentQuestions = shuffledQuestions.map(question => {
+      // Ensure 'a' exists and is an array with at least one answer
+       if (!question.a || !Array.isArray(question.a) || question.a.length === 0) {
+           console.warn("Skipping answer shuffle for question with invalid answers during shuffleBoth:", question);
+           return question; // Return original if answers are invalid
+       }
+
+      const correctIndex = Math.max(0, Math.min(question.correct - 1, question.a.length - 1));
+      const correctAnswer = question.a[correctIndex];
+      const shuffledAnswers = shuffleArray([...question.a]);
+      const newCorrectIndex = shuffledAnswers.indexOf(correctAnswer) + 1;
+
+       // Ensure correct answer was found after shuffle
+       if (newCorrectIndex === 0 && correctAnswer !== undefined) {
+            console.error("Correct answer not found after shuffling answers during shuffleBoth for question:", question);
+            return question; // Fallback
+       }
+        // Handle case where correctAnswer was undefined due to bad original correct index
+       if (correctAnswer === undefined || newCorrectIndex === 0) {
+           console.error("Invalid correct index in original question, skipping answer shuffleBoth:", question);
+            return question;
+       }
+
+      return {
+        q: question.q,
+        a: shuffledAnswers,
+        correct: newCorrectIndex
+      };
+    });
+
+    displayResult(currentQuestions); // displayResult updates originalQuestions and saves state
+    showStatus(`تم خلط ترتيب الأسئلة وإجابات ${currentQuestions.length} سؤال بنجاح`, false);
+  }
+
+  // ========== دوال تحديد موضع الإجابة الصحيحة (Modified) ========== //
+
+  // تبديل عرض القائمة المنسدلة
+  function togglePositionDropdown() {
+    document.getElementById("positionDropdown").classList.toggle("show");
+  }
+
+  // إغلاق القوائم المنسدلة عند النقر خارجها
+  window.onclick = function(event) {
+    if (!event.target.matches('.position-btn')) {
+      const dropdowns = document.getElementsByClassName("dropdown-content");
+      for (let i = 0; i < dropdowns.length; i++) {
+        const openDropdown = dropdowns[i];
+        if (openDropdown.classList.contains('show')) {
+          openDropdown.classList.remove('show');
+        }
+      }
+    }
+  }
+
+  // تحديد موضع الإجابة الصحيحة
+  function setCorrectPosition(position) {
+    if (!prepareQuestions()) {
+        togglePositionDropdown(); // Close dropdown on error
+        return;
+    }
+
+    if (position < 1) {
+        showStatus('موضع الإجابة الصحيحة يجب أن يكون 1 أو أعلى.', true);
+         togglePositionDropdown();
+        return;
+    }
+
+    let updatedCount = 0;
+
+    currentQuestions = originalQuestions.map(question => {
+      // Ensure 'a' exists, is array, and has enough options for the target position
+      if (!question.a || !Array.isArray(question.a) || question.a.length < position || question.correct < 1 || question.correct > question.a.length) {
+          console.warn(`Skipping setting correct position ${position} for question with insufficient/invalid answers or correct index:`, question);
+          return question; // Return original if insufficient answers or invalid correct index
+      }
+
+      const answers = [...question.a];
+      const correctIndex = question.correct - 1; // 0-based index
+      const correctAnswer = answers[correctIndex];
+
+      // Move correct answer to the target position if it's not already there
+      if (correctIndex !== position - 1) {
+        // Remove correct answer from its current position
+        answers.splice(correctIndex, 1);
+        // Insert correct answer at the target position
+        answers.splice(position - 1, 0, correctAnswer);
+      }
+
+      updatedCount++;
+      return {
+        q: question.q,
+        a: answers,
+        correct: position
+      };
+    });
+
+    displayResult(currentQuestions); // displayResult updates originalQuestions and saves state
+     if (updatedCount > 0) {
+         showStatus(`تم تحديث الإجابة الصحيحة إلى الموضع ${position} لـ ${updatedCount} سؤال.`, false);
+     } else {
+          showStatus(`لم يتم تحديث أي سؤال. تأكد أن لديهم إجابات كافية للموضع ${position}.`, true);
+     }
+
+    togglePositionDropdown(); // Close dropdown after action
+  }
+
+  // ========== دوال تقسيم الأسئلة (Modified) ========== //
+
+  // تبديل عرض قسم التقسيم
+  function toggleSplitSection() {
+    const splitSectionContainer = document.getElementById("splitSectionContainer");
+    const isHidden = splitSectionContainer.style.display === 'none' || splitSectionContainer.style.display === '';
+    splitSectionContainer.style.display = isHidden ? 'block' : 'none';
+    // Also clear splits when hiding the section
+    if (!isHidden) {
+         clearSplit();
+    }
+     // Ensure originalQuestions is loaded if JSON output has content when showing the section
+     if (isHidden && document.getElementById('jsonOutput').value.trim()) {
+         prepareQuestions(); // Reloads originalQuestions from JSON output and updates count
+     }
+     showStatus('', false); // Clear main status when toggling
+     document.getElementById('splitStatus').textContent = ''; // Clear split status
+     document.getElementById('splitStatus').className = 'status'; // Clear split status styling
+  }
+
+  // تقسيم الأسئلة إلى مربعات منفصلة
+  function splitQuestions() {
+    const splitSizeInput = document.getElementById('splitNumber');
+    const boxesContainer = document.getElementById('splitBoxes');
+    const remainingContainer = document.getElementById('remainingBox');
+    const splitStatusElement = document.getElementById('splitStatus'); // Use specific status for split
+
+    boxesContainer.innerHTML = ''; // Clear previous split boxes
+    remainingContainer.style.display = 'none'; // Hide remaining box
+    splitStatusElement.textContent = ''; // Clear previous status
+    splitStatusElement.className = 'status'; // Clear status styling
+    splitFiles = [];
+    remainingQuestions = [];
+
+    const splitSize = parseInt(splitSizeInput.value);
+
+    if (!splitSize || splitSize <= 0) {
+      splitStatusElement.textContent = 'الرجاء إدخال عدد صحيح موجب للتقسيم.';
+      splitStatusElement.className = 'status error';
+      return;
+    }
+
+    // Ensure originalQuestions is populated from the JSON output field
+    if (!prepareQuestions()) {
+       splitStatusElement.textContent = 'يرجى إدخال أسئلة صالحة بصيغة JSON أولاً.';
+       splitStatusElement.className = 'status error';
+       return;
+    }
+
+    const totalQuestions = originalQuestions.length;
+
+    if (totalQuestions === 0) {
+        splitStatusElement.textContent = 'لا توجد أسئلة لتقسيمها.';
+        splitStatusElement.className = 'status error';
+        return;
+    }
+     if (splitSize > totalQuestions) {
+        splitStatusElement.textContent = `عدد الأسئلة المطلوبة للتجزئة (${splitSize}) أكبر من إجمالي عدد الأسئلة (${totalQuestions}). يرجى إدخال عدد أقل أو مساوٍ.`;
+        splitStatusElement.className = 'status error';
+        return;
+     }
+
+
+    const fullParts = Math.floor(totalQuestions / splitSize);
+    let currentQuestionIndex = 0;
+
+    for (let i = 0; i < fullParts; i++) {
+      const startIdx = currentQuestionIndex;
+      const endIdx = startIdx + splitSize;
+      const chunk = originalQuestions.slice(startIdx, endIdx);
+      splitFiles.push(chunk);
+
+      createSplitBox(chunk, i+1, startIdx+1, endIdx);
+      currentQuestionIndex = endIdx;
+    }
+
+    const remainingCount = totalQuestions % splitSize;
+    if (remainingCount > 0) {
+      remainingQuestions = originalQuestions.slice(currentQuestionIndex);
+
+      const remainingText = remainingQuestions.map(q => {
+        // Ensure correct JSON formatting within the textarea
+        return `{ "q": "${escapeJsonString(q.q)}", "a": [${q.a.map(ans => `"${escapeJsonString(ans)}"`).join(',')}], "correct": ${q.correct} }`;
+      }).join(',\n');
+
+      document.getElementById('remainingQuestions').value = remainingText;
+      remainingContainer.style.display = 'block';
+
+      splitStatusElement.textContent = `تم تقسيم الملف إلى ${fullParts} أجزاء كاملة (${splitSize} أسئلة لكل جزء) وبقي ${remainingCount} أسئلة.`;
+      splitStatusElement.className = 'status success';
+    } else {
+      splitStatusElement.textContent = `تم تقسيم الملف إلى ${fullParts} أجزاء كاملة (${splitSize} أسئلة لكل جزء).`;
+      splitStatusElement.className = 'status success';
+    }
+  }
+
+  // إنشاء مربع قسم
+  function createSplitBox(chunk, partNum, startNum, endNum) {
+    const box = document.createElement('div');
+    box.className = 'split-box';
+
+    const formattedContent = chunk.map(q => {
+       // Ensure correct JSON formatting within the textarea
+       return `{ "q": "${escapeJsonString(q.q)}", "a": [${q.a.map(ans => `"${escapeJsonString(ans)}"`).join(',')}], "correct": ${q.correct} }`;
+    }).join(',\n');
+
+    box.innerHTML = `
+      <h3>الجزء ${partNum} (أسئلة ${startNum} - ${endNum})</h3>
+      <textarea readonly>${formattedContent}</textarea>
+      <div class="split-actions">
+        <button onclick="copyToClipboard(this.previousElementSibling)" class="copy-btn">نسخ</button>
+        <button onclick="downloadSplit(${partNum-1})" class="download-btn">حفظ</button>
+      </div>
+    `;
+
+    document.getElementById('splitBoxes').appendChild(box);
+  }
+
+  // مسح التقسيمات
+  function clearSplit() {
+    document.getElementById('splitBoxes').innerHTML = '';
+    document.getElementById('remainingBox').style.display = 'none';
+    document.getElementById('splitStatus').textContent = '';
+    document.getElementById('splitStatus').className = 'status'; // Clear status styling
+    splitFiles = [];
+    remainingQuestions = [];
+     showStatus('تم مسح جميع التقسيمات.', false);
+  }
+
+  // مسح الكل (Modified)
+  function clearAllQuestions() {
+    document.getElementById('inputText').value = '';
+    document.getElementById('jsonOutput').value = '';
+    document.getElementById('splitNumber').value = '';
+    clearSplit(); // Clear splits
+    originalQuestions = []; // Clear stored questions
+    updateCounters();
+    saveState(); // Save the cleared state
+    showStatus('تم مسح جميع البيانات.', false);
+  }
+
+  // ========== الدوال المساعدة (Modified) ========== //
+
+  // تحضير الأسئلة من حقل JSON Output
+  function prepareQuestions() {
+    const jsonInput = document.getElementById("jsonOutput").value.trim();
+     showStatus('', false); // Clear main status
+
+    if (!jsonInput) {
+      showStatus('يرجى إدخال أسئلة بصيغة JSON أولاً.', true);
+      originalQuestions = []; // Ensure originalQuestions is empty on error
+      updateCounters();
+      return false;
+    }
+
+    try {
+      let jsonString = jsonInput.replace(/,\s*$/, '');
+
+       // Attempt to parse as array first, then as single object wrapped in array
+      if (!jsonString.startsWith('[')) {
+           // If it doesn't start with [, assume it's a single object or comma-separated objects
+            if (!jsonString.startsWith('{')) {
+               throw new Error('بيانات JSON غير صالحة. يجب أن تبدأ بكائن { أو مصفوفة [.');
+            }
+          jsonString = `[${jsonString}]`;
+      }
+
+       // Clean up potential extra whitespace/newlines within the string
+       jsonString = jsonString.replace(/\r?\n|\r/g, '')
+                             .replace(/\s+/g, ' ') // Replace multiple spaces with one
+                             .replace(/},\s*{/g, '},{'); // Ensure object separators are correct
+
+      const parsedData = JSON.parse(jsonString);
+
+      if (!Array.isArray(parsedData)) {
+           throw new Error('بيانات JSON المدخلة ليست مصفوفة.');
+      }
+
+       // Basic validation for each question object structure
+      originalQuestions = parsedData.filter(item =>
+          item && typeof item === 'object' &&
+          typeof item.q === 'string' && item.q.trim().length > 0 && // Question string exists and not just whitespace
+          Array.isArray(item.a) && item.a.length >= 2 && // 'a' is an array with at least 2 elements
+          item.a.every(ans => typeof ans === 'string') && // All answers are strings
+          typeof item.correct === 'number' &&
+          item.correct >= 1 && item.correct <= item.a.length // Correct index is valid
+      );
+
+      if (originalQuestions.length === 0 && parsedData.length > 0) {
+         // If parsedData had items but none were valid according to filter
+         throw new Error(`لم يتم العثور على أسئلة صالحة في بيانات JSON المدخلة من أصل ${parsedData.length} عنصر تم العثور عليه.`);
+      } else if (originalQuestions.length === 0 && parsedData.length === 0) {
+         throw new Error('بيانات JSON المدخلة فارغة أو لا تحتوي على أي عناصر.');
+      }
+
+
+      updateCounters();
+      return true;
+    } catch (error) {
+      console.error("Error in prepareQuestions:", error);
+      showStatus(`خطأ في قراءة أسئلة JSON: ${error.message}`, true);
+      originalQuestions = []; // Ensure originalQuestions is empty on error
+      updateCounters();
+      return false;
+    }
+  }
+
+
+  // دالة الخلط الأساسية
+  function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  }
+
+  // عرض النتائج في حقل JSON Output (Modified to saveState and update originalQuestions)
+  function displayResult(questions) {
+    const formattedOutput = questions.map(q => {
+      // Ensure correct JSON formatting for display
+      return `{ "q": "${escapeJsonString(q.q)}", "a": [${q.a.map(ans => `"${escapeJsonString(ans)}"`).join(',')}], "correct": ${q.correct} }`;
+    }).join(',\n');
+
+    document.getElementById('jsonOutput').value = formattedOutput;
+
+    // Update originalQuestions to reflect the result of the modification (shuffle/set position)
+    // This ensures subsequent operations work on the modified data.
+    try {
+        let jsonString = formattedOutput.trim().replace(/,\s*$/, '');
+         if (!jsonString.startsWith('[')) {
+            jsonString = '[' + jsonString + ']';
+         }
+         jsonString = jsonString.replace(/\r?\n|\r/g, '').replace(/\s+/g, ' ').replace(/},\s*{/g, '},{');
+
+        const parsedData = JSON.parse(jsonString);
+
+         // Basic validation
+        originalQuestions = parsedData.filter(item =>
+               item && typeof item === 'object' && typeof item.q === 'string' && item.q.trim().length > 0 &&
+               Array.isArray(item.a) && item.a.length >= 2 && item.a.every(ans => typeof ans === 'string') &&
+               typeof item.correct === 'number' && item.correct >= 1 && item.correct <= item.a.length
+          );
+
+         if (originalQuestions.length !== parsedData.length) {
+             console.warn(`displayResult: Filtered out ${parsedData.length - originalQuestions.length} invalid items after formatting.`);
+         }
+
+        updateCounters(); // Update count based on the new originalQuestions
+    } catch (e) {
+         console.error("Error parsing generated JSON for originalQuestions update in displayResult:", e);
+         originalQuestions = []; // Clear on parsing error
+         updateCounters();
+          showStatus("تحذير: تم تعديل الأسئلة، لكن هناك خطأ في صيغة JSON الناتجة.", true);
+    }
+     saveState(); // Save state after updating the JSON output
+  }
+
+  // عرض رسائل الحالة
+  function showStatus(message, isError) {
+    const statusElement = document.getElementById('status');
+    statusElement.textContent = message;
+    if (message) {
+        statusElement.className = isError ? 'status error' : 'status success';
+    } else {
+        statusElement.className = 'status'; // Clear styling if message is empty
+    }
+     // Also clear the split status when updating the main status
+     document.getElementById('splitStatus').textContent = '';
+     document.getElementById('splitStatus').className = 'status';
+  }
+
+  // نسخ النص إلى الحافظة
+  function copyToClipboard(element) {
+    let textarea;
+    if (typeof element === 'string') {
+      textarea = document.getElementById(element);
+    } else if (element && element.tagName === 'TEXTAREA') {
+      textarea = element;
+    } else if (element && element.previousElementSibling && element.previousElementSibling.tagName === 'TEXTAREA') {
+        // If element is the button itself, find the preceding textarea
+        textarea = element.previousElementSibling;
+    } else {
+         console.error("Invalid element passed to copyToClipboard:", element);
+         showStatus('حدث خطأ في تحديد النص لنسخه.', true);
+         return;
+    }
+
+
+    if (!textarea || !textarea.value) {
+         showStatus('لا يوجد محتوى لنسخه.', true);
+         // Attempt to clear split status if the textarea is in a split box
+         const splitStatusElement = document.getElementById('splitStatus');
+         if (textarea.closest('.split-box') || textarea.id === 'remainingQuestions') {
+             splitStatusElement.textContent = 'لا يوجد محتوى لنسخه.';
+             splitStatusElement.className = 'status error';
+         }
+         return;
+    }
+
+    // Select the text
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length); // For mobile devices
+
+    try {
+        // Copy the text
+        const successful = document.execCommand('copy');
+        if (successful) {
+            const message = 'تم نسخ النص إلى الحافظة';
+            showStatus(message, false); // Update main status
+
+             // Also update split status if applicable
+             const splitStatusElement = document.getElementById('splitStatus');
+             if (textarea.closest('.split-box') || textarea.id === 'remainingQuestions') {
+                 splitStatusElement.textContent = message;
+                 splitStatusElement.className = 'status success';
+             }
+
+        } else {
+             throw new Error('execCommand failed');
+        }
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+         // Provide a fallback for cases where execCommand is not available or fails
+        const message = 'فشل النسخ التلقائي. يرجى نسخ النص يدوياً.';
+        showStatus(message, true); // Update main status
+
+         // Also update split status if applicable
+        const splitStatusElement = document.getElementById('splitStatus');
+        if (textarea.closest('.split-box') || textarea.id === 'remainingQuestions') {
+            splitStatusElement.textContent = message;
+            splitStatusElement.className = 'status error';
+        }
+    }
+
+     // Deselect the text after copying (can be annoying, keep commented unless needed)
+     // window.getSelection().removeAllRanges();
+  }
+
+
+  // حفظ قسم معين (Modified)
+  function downloadSplit(index) {
+    let content, filename;
+    const splitStatusElement = document.getElementById('splitStatus'); // Use specific status
+
+    splitStatusElement.textContent = ''; // Clear previous status
+    splitStatusElement.className = 'status'; // Clear status styling
+
+    if (index === 'remaining') {
+      if (!remainingQuestions.length) {
+        splitStatusElement.textContent = 'لا توجد أسئلة متبقية للحفظ.';
+        splitStatusElement.className = 'status error';
+        return;
+      }
+
+      // Get content directly from the textarea for consistency with display
+      // Add brackets to make it a valid JSON array
+       let textareaContent = document.getElementById('remainingQuestions').value.trim();
+       if (!textareaContent.startsWith('[')) {
+           textareaContent = `[\n${textareaContent}\n]`;
+       } else if (!textareaContent.endsWith(']')) {
+            if (textareaContent.trim().endsWith('}')) {
+                 textareaContent = `${textareaContent.trim()}\n]`;
+             } else {
+                textareaContent = `${textareaContent}\n]`; // Simple append
+             }
+       }
+       content = textareaContent;
+       filename = 'remaining_questions.json'; // English filename for compatibility
+    } else {
+      if (!splitFiles[index]) {
+        splitStatusElement.textContent = 'القسم المطلوب غير موجود.';
+        splitStatusElement.className = 'status error';
+        return;
+      }
+
+       // Format the content from the stored array for download
+       const chunkContent = splitFiles[index].map(q => {
+           return `{ "q": "${escapeJsonString(q.q)}", "a": [${q.a.map(ans => `"${escapeJsonString(ans)}"`).join(',')}], "correct": ${q.correct} }`;
+       }).join(',\n');
+
+       // Add brackets to make it a valid JSON array
+       content = `[\n${chunkContent}\n]`;
+       filename = `part_${index+1}_questions.json`; // English filename
+    }
+
+    saveToFile(content, filename, splitStatusElement);
+  }
+
+  // دالة مساعدة للحفظ (Modified)
+  function saveToFile(content, filename, statusElement) {
+    try {
+      // Optional: Attempt to parse to validate JSON before saving
+      // Check if content looks like JSON before trying to parse
+      if (content.trim().startsWith('[') && content.trim().endsWith(']')) {
+          JSON.parse(content); // Validate JSON structure
+      }
+
+
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      // Append to body temporarily to ensure click works in all browsers
+      document.body.appendChild(a);
+      a.click();
+      // Clean up
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      statusElement.textContent = `تم حفظ الملف ${filename} بنجاح.`;
+      statusElement.className = 'status success';
+
+    } catch (error) {
+      console.error("Error saving file:", error);
+      statusElement.textContent = `خطأ في حفظ الملف ${filename}: ${error.message}. تأكد من صحة الصيغة إذا كان ملف JSON.`;
+      statusElement.className = 'status error';
+    }
+  }
+
+  // تحديث عداد الأسئلة
+  function updateCounters() {
+    document.getElementById('inputCount').textContent = originalQuestions.length;
+  }
+
+  // عرض عدد الأسئلة
+  function showQuestionCount() {
+      // Try to parse JSON output field first if originalQuestions is empty
+      if (originalQuestions.length === 0 && document.getElementById('jsonOutput').value.trim()) {
+           if (!prepareQuestions()) { // prepareQuestions will show status if it fails
+               return; // Exit if preparation failed
+           }
+      }
+
+    if (originalQuestions.length > 0) {
+      showStatus(`عدد الأسئلة الحالية في حقل JSON: ${originalQuestions.length}`, false);
+    } else {
+      showStatus('لا توجد أسئلة صالحة محملة في حقل JSON.', true);
+    }
+  }
+
+   // ========== Instructions Toggle (New) ========== //
+   function toggleInstructions() {
+       const instructionsBox = document.getElementById('instructionsBox');
+       const isHidden = instructionsBox.style.display === 'none' || instructionsBox.style.display === '';
+       instructionsBox.style.display = isHidden ? 'block' : 'none';
+       // Scroll to the instructions box if showing it
+       if (isHidden) {
+           instructionsBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+       }
+   }
+
+  // Initial load and setup
+  document.addEventListener('DOMContentLoaded', (event) => {
+      // loadState is already called at the beginning of the script
+      // Any other initializations can go here
+  });
+
+</script>
+
+</body>
+</html>
